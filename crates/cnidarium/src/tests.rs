@@ -8,7 +8,7 @@ async fn delete_nonexistent_key() -> anyhow::Result<()> {
     // Initialize an empty Storage in the new directory
     let storage = Storage::load(tmpdir.path().to_owned(), vec![]).await?;
 
-    let mut state_init = StateDelta::new(storage.latest_snapshot());
+    let state_init = StateDelta::new(storage.latest_snapshot());
     state_init.delete("nonexist".to_string());
     storage.commit(state_init).await?;
 
@@ -83,7 +83,7 @@ async fn simple_flow() -> anyhow::Result<()> {
     assert_eq!(state_init.get_raw("a/aa").await?, None);
 
     // Create tx00
-    let mut tx00 = StateDelta::new(&mut state_init);
+    let tx00 = StateDelta::new(&mut state_init);
     tx00.put_raw("test".to_owned(), b"test".to_vec());
     tx00.object_put("c/aa", 0u64);
     tx00.object_put("c/ab", 1u64);
@@ -160,7 +160,7 @@ async fn simple_flow() -> anyhow::Result<()> {
     std::mem::drop(range);
 
     // Create a transaction writing the other keys.
-    let mut tx01 = StateDelta::new(&mut state_init);
+    let tx01 = StateDelta::new(&mut state_init);
     tx01.put_raw("a/aa".to_owned(), b"aa".to_vec());
     tx01.put_raw("a/aaa".to_owned(), b"aaa".to_vec());
     tx01.put_raw("a/ab".to_owned(), b"ab".to_vec());
@@ -320,7 +320,7 @@ async fn simple_flow() -> anyhow::Result<()> {
     std::mem::drop(range);
 
     // Start building a transaction
-    let mut tx10 = StateDelta::new(&mut state0);
+    let tx10 = StateDelta::new(&mut state0);
     tx10.delete("test".to_owned());
     tx10.delete("a/aaa".to_owned());
     tx10.put_raw("a/c".to_owned(), b"c".to_vec());
@@ -414,7 +414,7 @@ async fn simple_flow() -> anyhow::Result<()> {
     std::mem::drop(range);
 
     // Start building another transaction
-    let mut tx11 = StateDelta::new(&mut state0);
+    let tx11 = StateDelta::new(&mut state0);
     tx11.put_raw("a/ab".to_owned(), b"ab2".to_vec());
     tx11.nonverifiable_delete(b"iD".to_vec());
 
@@ -814,7 +814,7 @@ async fn range_queries_basic() -> anyhow::Result<()> {
     assert_eq!(range.next().await.transpose()?, None);
     std::mem::drop(range);
 
-    let mut tx00 = StateDelta::new(&mut state_init);
+    let tx00 = StateDelta::new(&mut state_init);
     tx00.nonverifiable_put_raw(b"iA".to_vec(), b"A".to_vec());
     tx00.nonverifiable_put_raw(b"iC".to_vec(), b"C".to_vec());
     tx00.nonverifiable_put_raw(b"iF".to_vec(), b"F".to_vec());
@@ -886,7 +886,7 @@ async fn range_queries_basic() -> anyhow::Result<()> {
     assert_eq!(range.next().await.transpose()?, None);
     std::mem::drop(range);
 
-    let mut tx01 = StateDelta::new(&mut state_init);
+    let tx01 = StateDelta::new(&mut state_init);
     tx01.nonverifiable_delete(b"iA".to_vec());
     tx01.nonverifiable_put_raw(b"iC".to_vec(), b"China".to_vec());
     tx01.nonverifiable_put_raw(b"iD".to_vec(), b"Denmark".to_vec());
@@ -985,7 +985,7 @@ async fn range_queries_basic() -> anyhow::Result<()> {
     assert_eq!(range.next().await.transpose()?, None);
     std::mem::drop(range);
 
-    let mut tx02 = StateDelta::new(&mut state_init);
+    let tx02 = StateDelta::new(&mut state_init);
 
     for i in 0..=100 {
         tx02.nonverifiable_put_raw(
@@ -1156,12 +1156,12 @@ async fn range_query_prepend_peeked_value() -> anyhow::Result<()> {
 
     let storage = Storage::load(tmpdir.path().to_owned(), vec![]).await?;
 
-    let mut state_init = StateDelta::new(storage.latest_snapshot());
+    let state_init = StateDelta::new(storage.latest_snapshot());
     state_init.nonverifiable_put_raw(b"b".to_vec(), b"beluga".to_vec());
     state_init.nonverifiable_put_raw(b"c".to_vec(), b"charm".to_vec());
     storage.commit(state_init).await?;
 
-    let mut state = StateDelta::new(storage.latest_snapshot());
+    let state = StateDelta::new(storage.latest_snapshot());
     let mut range = state.nonverifiable_range_raw(None, ..)?;
     assert_eq!(
         range.next().await.transpose()?,
@@ -1234,7 +1234,7 @@ async fn range_query_ordering() -> anyhow::Result<()> {
 
     let storage = Storage::load(tmpdir.path().to_owned(), vec![]).await?;
 
-    let mut state_init = StateDelta::new(storage.latest_snapshot());
+    let state_init = StateDelta::new(storage.latest_snapshot());
     let mut range = state_init.nonverifiable_range_raw(None, ..)?;
     assert_eq!(range.next().await.transpose()?, None);
     std::mem::drop(range);
@@ -1326,7 +1326,7 @@ async fn range_query_storage_basic() -> anyhow::Result<()> {
     let tmpdir = tempfile::tempdir()?;
 
     let storage = Storage::load(tmpdir.path().to_owned(), vec![]).await?;
-    let mut delta = StateDelta::new(storage.latest_snapshot());
+    let delta = StateDelta::new(storage.latest_snapshot());
 
     for height in 0..100 {
         delta.nonverifiable_put_raw(
@@ -1412,7 +1412,7 @@ async fn range_query_storage() -> anyhow::Result<()> {
     let tmpdir = tempfile::tempdir()?;
 
     let storage = Storage::load(tmpdir.path().to_owned(), vec![]).await?;
-    let mut delta = StateDelta::new(storage.latest_snapshot());
+    let delta = StateDelta::new(storage.latest_snapshot());
 
     delta.nonverifiable_put_raw(b"a/aaaaa".to_vec(), b"1".to_vec());
     delta.nonverifiable_put_raw(b"a/aaaab".to_vec(), b"2".to_vec());

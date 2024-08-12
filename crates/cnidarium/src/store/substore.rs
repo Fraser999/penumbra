@@ -200,7 +200,7 @@ impl Display for SubstoreConfig {
 /// A [`SubstoreSnapshot`] is lightweight and cheap to create, it can be
 /// instantiated on-demand when a read-only view of a substore's state is
 /// needed.
-pub struct SubstoreSnapshot {
+pub(crate) struct SubstoreSnapshot {
     pub(crate) config: Arc<SubstoreConfig>,
     pub(crate) rocksdb_snapshot: Arc<RocksDbSnapshot>,
     pub(crate) version: jmt::Version,
@@ -208,7 +208,7 @@ pub struct SubstoreSnapshot {
 }
 
 impl SubstoreSnapshot {
-    pub fn root_hash(&self) -> Result<crate::RootHash> {
+    pub(crate) fn root_hash(&self) -> Result<crate::RootHash> {
         let version = self.version();
         let tree = jmt::Sha256Jmt::new(self);
         Ok(tree
@@ -216,7 +216,7 @@ impl SubstoreSnapshot {
             .unwrap_or(jmt::RootHash([0; 32])))
     }
 
-    pub fn version(&self) -> jmt::Version {
+    pub(crate) fn version(&self) -> jmt::Version {
         self.version
     }
 
@@ -237,7 +237,7 @@ impl SubstoreSnapshot {
     /// Reads from the JMT will fail if the root is missing; this method
     /// special-cases the empty tree case so that reads on an empty tree just
     /// return None.
-    pub fn get_jmt(&self, key: jmt::KeyHash) -> Result<Option<Vec<u8>>> {
+    pub(crate) fn get_jmt(&self, key: jmt::KeyHash) -> Result<Option<Vec<u8>>> {
         let tree = jmt::Sha256Jmt::new(self);
         match tree.get(key, self.version()) {
             Ok(Some(value)) => {
@@ -361,12 +361,12 @@ impl HasPreimage for SubstoreSnapshot {
     }
 }
 
-pub struct SubstoreStorage {
+pub(crate) struct SubstoreStorage {
     pub(crate) substore_snapshot: SubstoreSnapshot,
 }
 
 impl SubstoreStorage {
-    pub async fn commit(
+    pub(crate) async fn commit(
         self,
         cache: Cache,
         mut write_batch: rocksdb::WriteBatch,
@@ -470,22 +470,22 @@ impl TreeWriter for SubstoreStorage {
 
 /// An ordered node key is a node key that is encoded in a way that
 /// preserves the order of the node keys in the database.
-pub struct DbNodeKey(pub NodeKey);
+pub(crate) struct DbNodeKey(pub(crate) NodeKey);
 
 impl DbNodeKey {
-    pub fn from(node_key: NodeKey) -> Self {
+    pub(crate) fn from(node_key: NodeKey) -> Self {
         DbNodeKey(node_key)
     }
 
-    pub fn into_inner(self) -> NodeKey {
+    pub(crate) fn into_inner(self) -> NodeKey {
         self.0
     }
 
-    pub fn encode(&self) -> Result<Vec<u8>> {
+    pub(crate) fn encode(&self) -> Result<Vec<u8>> {
         Self::encode_from_node_key(&self.0)
     }
 
-    pub fn encode_from_node_key(node_key: &NodeKey) -> Result<Vec<u8>> {
+    pub(crate) fn encode_from_node_key(node_key: &NodeKey) -> Result<Vec<u8>> {
         let mut bytes = Vec::new();
         bytes.extend_from_slice(&node_key.version().to_be_bytes()); // encode version as big-endian
         let rest = borsh::to_vec(node_key)?;
@@ -493,7 +493,7 @@ impl DbNodeKey {
         Ok(bytes)
     }
 
-    pub fn decode(bytes: impl AsRef<[u8]>) -> Result<Self> {
+    pub(crate) fn decode(bytes: impl AsRef<[u8]>) -> Result<Self> {
         if bytes.as_ref().len() < 8 {
             anyhow::bail!("byte slice is too short")
         }
@@ -507,24 +507,24 @@ impl DbNodeKey {
 /// Represent a JMT key hash at a specific `jmt::Version`
 /// This is used to index the JMT values in RocksDB.
 #[derive(Clone, Debug)]
-pub struct VersionedKeyHash {
-    pub key_hash: KeyHash,
-    pub version: jmt::Version,
+pub(crate) struct VersionedKeyHash {
+    pub(crate) key_hash: KeyHash,
+    pub(crate) version: jmt::Version,
 }
 
 impl VersionedKeyHash {
-    pub fn encode(&self) -> Vec<u8> {
+    pub(crate) fn encode(&self) -> Vec<u8> {
         VersionedKeyHash::encode_from_keyhash(&self.key_hash, &self.version)
     }
 
-    pub fn encode_from_keyhash(key_hash: &KeyHash, version: &jmt::Version) -> Vec<u8> {
+    pub(crate) fn encode_from_keyhash(key_hash: &KeyHash, version: &jmt::Version) -> Vec<u8> {
         let mut buf: Vec<u8> = key_hash.0.to_vec();
         buf.extend_from_slice(&version.to_be_bytes());
         buf
     }
 
     #[allow(dead_code)]
-    pub fn decode(buf: Vec<u8>) -> Result<Self> {
+    pub(crate) fn decode(buf: Vec<u8>) -> Result<Self> {
         if buf.len() != 40 {
             Err(anyhow::anyhow!(
                 "could not decode buffer into VersionedKey (invalid size)"

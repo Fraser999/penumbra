@@ -13,7 +13,7 @@ use std::{cmp, collections::VecDeque};
 ///
 /// [`Snapshot`]s must be inserted sequentially relative to their [`jmt::Version`]
 /// numbers, and have consecutive version numbers.
-pub struct SnapshotCache {
+pub(crate) struct SnapshotCache {
     /// A sequence of increasingly recent [`Snapshot`]s.
     cache: VecDeque<Snapshot>,
     /// The max length and capacity of the cache.
@@ -23,7 +23,7 @@ pub struct SnapshotCache {
 impl SnapshotCache {
     /// Creates a [`SnapshotCache`] with `max_size` capacity, and inserts an initial `Snapshot` in
     /// it. If the specified capacity is zero, the cache will default to having size 1.
-    pub fn new(initial: Snapshot, max_size: usize) -> Self {
+    pub(crate) fn new(initial: Snapshot, max_size: usize) -> Self {
         let max_size = cmp::max(max_size, 1);
         let mut cache = VecDeque::with_capacity(max_size);
         cache.push_front(initial);
@@ -44,7 +44,7 @@ impl SnapshotCache {
     /// - stale i.e. older than the latest snapshot
     ///
     /// - skipping a version i.e. the difference between their version numbers is greater than 1
-    pub fn try_push(&mut self, snapshot: Snapshot) -> anyhow::Result<()> {
+    pub(crate) fn try_push(&mut self, snapshot: Snapshot) -> anyhow::Result<()> {
         let latest_version = self.latest().version();
         if latest_version.wrapping_add(1) != snapshot.version() {
             anyhow::bail!("snapshot_cache: trying to insert stale snapshots.");
@@ -59,7 +59,7 @@ impl SnapshotCache {
     }
 
     /// Returns the latest inserted `Snapshot`.
-    pub fn latest(&self) -> Snapshot {
+    pub(crate) fn latest(&self) -> Snapshot {
         self.cache
             .front()
             .map(Clone::clone)
@@ -68,7 +68,7 @@ impl SnapshotCache {
 
     /// Attempts to fetch a [`Snapshot`] with a matching `jmt::Version`, and returns `None` if none
     /// was found.
-    pub fn get(&self, version: jmt::Version) -> Option<Snapshot> {
+    pub(crate) fn get(&self, version: jmt::Version) -> Option<Snapshot> {
         let latest_version = self.latest().version();
         // We compute the offset assuming that snapshot entries are cached
         // such that the delta between entries is always 1.
@@ -80,7 +80,7 @@ impl SnapshotCache {
     }
 
     /// Empties the cache.
-    pub fn clear(&mut self) {
+    pub(crate) fn clear(&mut self) {
         self.cache.clear();
     }
 }

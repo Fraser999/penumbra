@@ -37,7 +37,7 @@ impl MultistoreConfig {
     ///
     /// # Routing
     /// + If the key is a total match for the prefix, the **main store** is returned.
-    /// + If the key is not a total match for the prefix, the prefix is removed from  
+    /// + If the key is not a total match for the prefix, the prefix is removed from
     ///   the key and the key is routed to the substore matching the prefix.
     /// + If the key does not match any prefix, the key is routed to the **main store**.
     /// + If a delimiter is prefixing the key, it is removed.
@@ -90,7 +90,7 @@ impl MultistoreConfig {
     ///
     /// # Routing
     /// + If the key is a total match for the prefix, the **main store** is returned.
-    /// + If the key is not a total match for the prefix, the prefix is removed from  
+    /// + If the key is not a total match for the prefix, the prefix is removed from
     ///   the key and the key is routed to the substore matching the prefix.
     /// + If the key does not match any prefix, the key is routed to the **main store**.
     /// + If a delimiter is prefixing the key, it is removed.
@@ -200,9 +200,9 @@ impl Default for MultistoreConfig {
 
 /// Tracks the latest version of each substore, and wraps a `MultistoreConfig`.
 #[derive(Default, Debug)]
-pub struct MultistoreCache {
-    pub config: MultistoreConfig,
-    pub substores: std::collections::BTreeMap<Arc<SubstoreConfig>, jmt::Version>,
+pub(crate) struct MultistoreCache {
+    pub(crate) config: MultistoreConfig,
+    pub(crate) substores: std::collections::BTreeMap<Arc<SubstoreConfig>, jmt::Version>,
 }
 
 impl Display for MultistoreCache {
@@ -216,18 +216,18 @@ impl Display for MultistoreCache {
 }
 
 impl MultistoreCache {
-    pub fn from_config(config: MultistoreConfig) -> Self {
+    pub(crate) fn from_config(config: MultistoreConfig) -> Self {
         Self {
             config,
             substores: std::collections::BTreeMap::new(),
         }
     }
 
-    pub fn set_version(&mut self, substore: Arc<SubstoreConfig>, version: jmt::Version) {
+    pub(crate) fn set_version(&mut self, substore: Arc<SubstoreConfig>, version: jmt::Version) {
         self.substores.insert(substore, version);
     }
 
-    pub fn get_version(&self, substore: &Arc<SubstoreConfig>) -> Option<jmt::Version> {
+    pub(crate) fn get_version(&self, substore: &Arc<SubstoreConfig>) -> Option<jmt::Version> {
         self.substores.get(substore).cloned()
     }
 }

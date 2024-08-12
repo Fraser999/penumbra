@@ -412,7 +412,7 @@ impl<S: StateRead> StateRead for StateDelta<S> {
 }
 
 impl<S: StateRead> StateWrite for StateDelta<S> {
-    fn put_raw(&mut self, key: String, value: jmt::OwnedValue) {
+    fn put_raw(&self, key: String, value: jmt::OwnedValue) {
         self.leaf_cache
             .write()
             .as_mut()
@@ -421,7 +421,7 @@ impl<S: StateRead> StateWrite for StateDelta<S> {
             .insert(key, Some(value));
     }
 
-    fn delete(&mut self, key: String) {
+    fn delete(&self, key: String) {
         self.leaf_cache
             .write()
             .as_mut()
@@ -430,7 +430,7 @@ impl<S: StateRead> StateWrite for StateDelta<S> {
             .insert(key, None);
     }
 
-    fn nonverifiable_delete(&mut self, key: Vec<u8>) {
+    fn nonverifiable_delete(&self, key: Vec<u8>) {
         tracing::trace!(key = ?EscapedByteSlice(&key), "deleting key");
         self.leaf_cache
             .write()
@@ -440,7 +440,7 @@ impl<S: StateRead> StateWrite for StateDelta<S> {
             .insert(key, None);
     }
 
-    fn nonverifiable_put_raw(&mut self, key: Vec<u8>, value: Vec<u8>) {
+    fn nonverifiable_put_raw(&self, key: Vec<u8>, value: Vec<u8>) {
         tracing::trace!(key = ?EscapedByteSlice(&key), value = ?EscapedByteSlice(&value), "insert nonverifiable change");
         self.leaf_cache
             .write()
@@ -450,7 +450,7 @@ impl<S: StateRead> StateWrite for StateDelta<S> {
             .insert(key, Some(value));
     }
 
-    fn object_put<T: Clone + Any + Send + Sync>(&mut self, key: &'static str, value: T) {
+    fn object_put<T: Clone + Any + Send + Sync>(&self, key: &'static str, value: T) {
         if let Some(previous_type) = self.object_type(key) {
             if std::any::TypeId::of::<T>() != previous_type {
                 panic!(
@@ -467,7 +467,7 @@ impl<S: StateRead> StateWrite for StateDelta<S> {
             .insert(key, Some(Box::new(value)));
     }
 
-    fn object_delete(&mut self, key: &'static str) {
+    fn object_delete(&self, key: &'static str) {
         self.leaf_cache
             .write()
             .as_mut()
@@ -477,7 +477,7 @@ impl<S: StateRead> StateWrite for StateDelta<S> {
     }
 
     fn object_merge(
-        &mut self,
+        &self,
         objects: std::collections::BTreeMap<&'static str, Option<Box<dyn Any + Send + Sync>>>,
     ) {
         self.leaf_cache
@@ -488,7 +488,7 @@ impl<S: StateRead> StateWrite for StateDelta<S> {
             .extend(objects);
     }
 
-    fn record(&mut self, event: abci::Event) {
+    fn record(&self, event: abci::Event) {
         self.leaf_cache
             .write()
             .as_mut()

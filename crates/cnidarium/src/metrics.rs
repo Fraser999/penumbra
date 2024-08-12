@@ -12,7 +12,7 @@
 //! This trick is probably good to avoid in general, because it could be
 //! confusing, but in this limited case, it seems like a clean option.
 
-pub use metrics::*;
+pub(crate) use metrics::*;
 
 /// Registers all metrics used by this crate.
 pub fn register_metrics() {
@@ -28,6 +28,6 @@ pub fn register_metrics() {
     );
 }
 
-pub const STORAGE_GET_RAW_DURATION: &str = "cnidarium_get_raw_duration_seconds";
-pub const STORAGE_NONCONSENSUS_GET_RAW_DURATION: &str =
+pub(crate) const STORAGE_GET_RAW_DURATION: &str = "cnidarium_get_raw_duration_seconds";
+pub(crate) const STORAGE_NONCONSENSUS_GET_RAW_DURATION: &str =
     "cnidarium_nonverifiable_get_raw_duration_seconds";

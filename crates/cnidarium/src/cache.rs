@@ -48,7 +48,7 @@ impl Cache {
     }
 
     /// Consume this cache, applying its writes to the given state.
-    pub fn apply_to<S: StateWrite>(self, mut state: S) {
+    pub fn apply_to<S: StateWrite>(self, state: S) {
         for (key, value) in self.unwritten_changes {
             if let Some(value) = value {
                 state.put_raw(key, value);
